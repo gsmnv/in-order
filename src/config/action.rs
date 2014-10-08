@@ -24,8 +24,8 @@ impl Action {
     }
 
     pub fn find_actions(root: &Path, cmd: &String, special: &TreeMap<String, toml::Value>) -> Result<Vec<Action>, &'static str> {
-        let mut actions: Vec<Action> = vec![];
         let dirs = try!(select_files(root, |_, path| valid_action_dir(path)));
+        let mut actions: Vec<Action> = Vec::with_capacity(dirs.len());
 
         for dir in dirs.iter() {
             let do_file = try!(select_files(dir, |name, _| name.starts_with("do"))).into_iter().next();

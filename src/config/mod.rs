@@ -49,30 +49,33 @@ impl Config {
     }
 
     pub fn set_current_action(&mut self, current_action: uint) -> Result<(), &'static str> {
-        let mut config = vec![];
         let mut exists = false;
-        let ca_string = format!("current_action = {}\n", current_action);
-        let ca_bytes = ca_string.as_bytes();
+        let ca_string = format!("current_action = {}", current_action);
 
         let mut file = match File::open_mode(&self.path, Open, ReadWrite) {
             Ok(file)   => file,
             Err(error) => return Err(error.desc)
         };
 
-        for line in file.read_to_string().unwrap().as_slice().lines() {
-            if is_current_action(line.as_slice()) {
+        let mut config = file.read_to_string().unwrap().as_slice().lines().map(|line| {
+            if is_current_action(line) {
                 exists = true;
-                config.push_all(ca_bytes);
+                ca_string.as_slice()
             } else {
-                config.push_all(format!("{}\n", line).as_bytes());
+                line
             }
-        }
+        }).collect::<Vec<&str>>().connect("\n");
 
-        if !exists { config.push_all(ca_bytes) }
+        config.push('\n');
+
+        if !exists {
+            config.push_str(ca_string.as_slice());
+            config.push('\n');
+        }
 
         match file.seek(0, io::SeekSet) {
             Err(error) => Err(error.desc),
-            Ok(_)      => match file.write(config.as_slice()) {
+            Ok(_)      => match file.write(config.as_bytes()) {
                 Err(error) => Err(error.desc),
                 Ok(_)      => { self.current_action = current_action; Ok(()) }
             }
