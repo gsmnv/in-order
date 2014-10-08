@@ -39,10 +39,10 @@ fn read_config() {
     let config = Config::read(path).unwrap();
     let action = config.actions[0].clone();
 
-    assert!(action.command == "sh".to_string());
-    assert!(action.name == "1-first".to_string());
-    assert!(action.do_file.unwrap().filename_str().unwrap() == "do.sh");
-    assert!(action.undo_file.unwrap().filename_str().unwrap() == "undo.sh")
+    assert_eq!(action.command, "sh".to_string());
+    assert_eq!(action.name, "1-first".to_string());
+    assert_eq!(action.do_file.unwrap().filename_str().unwrap(), "do.sh");
+    assert_eq!(action.undo_file.unwrap().filename_str().unwrap(), "undo.sh")
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn special_command() {
     let config = Config::read(path).unwrap();
     let action = config.actions.last().unwrap().clone();
 
-    assert!(action.command == "special".to_string());
+    assert_eq!(action.command, "special".to_string());
 }
 
 #[test]
@@ -76,13 +76,13 @@ fn perform_do_undo() {
 
     assert!(Path::new("/tmp/in-order-test-file-1").exists());
     assert!(Path::new("/tmp/in-order-test-file-2").exists());
-    assert!(read(path).as_slice() == config_3);
+    assert_eq!(read(path).as_slice(), config_3);
 
     config.perform(Undo);
 
     assert!(!Path::new("/tmp/in-order-test-file-1").exists());
     assert!(!Path::new("/tmp/in-order-test-file-2").exists());
-    assert!(read(path).as_slice() == config_0);
+    assert_eq!(read(path).as_slice(), config_0);
 
     restore_config(path);
 }
