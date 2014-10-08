@@ -1,0 +1,5 @@
+command = "sh"
+root = "tests/sequence"
+[special]
+[special.3]
+command = "special"

@@ -1,0 +1,19 @@
+# Optional
+# Default: CWD
+# Tells where to find your actions.
+root = "examples/migrations"
+# Required,
+# To this command will be passed each of your 'do' or 'undo' paths.
+# E.g: psql -d postgres -f examples/migrations/1-create-database/do.sql
+command = "psql -d postgres -f"
+# Optional
+# Default: 0
+# If not set then will be added to config file automatically.
+# Represents your current state, i.e., what is an index of last action
+# performed.
+current_action = 0
+# Optional
+# Special commands for specific actions.
+[special]
+  [special.3]
+  command = "sh"
