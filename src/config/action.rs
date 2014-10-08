@@ -25,23 +25,12 @@ impl Action {
 
     pub fn find_actions(root: &Path, cmd: &String, special: &TreeMap<String, toml::Value>) -> Result<Vec<Action>, &'static str> {
         let mut actions: Vec<Action> = vec![];
-        let dirs = match select_files(root, |_, path| valid_action_dir(path)) {
-            Ok(dirs) => dirs,
-            Err(error) => return Err(error)
-        };
+        let dirs = try!(select_files(root, |_, path| valid_action_dir(path)));
 
         for dir in dirs.iter() {
-            let do_file =
-                match select_files(dir, |name, _| name.starts_with("do")) {
-                    Ok(dirs)   => dirs.into_iter().next(),
-                    Err(error) => return Err(error)
-                };
+            let do_file = try!(select_files(dir, |name, _| name.starts_with("do"))).into_iter().next();
 
-            let undo_file =
-                match select_files(dir, |name, _| name.starts_with("undo")) {
-                    Ok(dirs)   => dirs.into_iter().next(),
-                    Err(error) => return Err(error)
-                };
+            let undo_file = try!(select_files(dir, |name, _| name.starts_with("undo"))).into_iter().next();
 
             let name = dir.filename_str().unwrap().to_string();
 

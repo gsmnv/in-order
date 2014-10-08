@@ -24,40 +24,22 @@ pub struct Config {
 
 impl Config {
     pub fn read(path: Option<String>) -> Result<Config, &'static str> {
-        let path = match decide_config_path(&path) {
-            Err(error) => return Err(error),
-            Ok(path)   => path
-        };
+        let path = try!(decide_config_path(&path));
 
         let toml = match File::open(&path).read_to_string() {
             Err(error) => return Err(error.desc),
             Ok(file)   => from_str(file.as_slice()).unwrap()
         };
 
-        let root = match lookup_root(&toml) {
-            Err(error) => return Err(error),
-            Ok(path)   => path
-        };
+        let root = try!(lookup_root(&toml));
 
-        let current_action = match lookup_current_action(&toml) {
-            Err(error) => return Err(error),
-            Ok(n)      => n
-        };
+        let current_action = try!(lookup_current_action(&toml));
 
-        let command = match lookup_command(&toml) {
-            Err(error) => return Err(error),
-            Ok(string) => string
-        };
+        let command = try!(lookup_command(&toml));
 
-        let special = match lookup_special(&toml) {
-            Err(error) => return Err(error),
-            Ok(map)    => map
-        };
+        let special = try!(lookup_special(&toml));
 
-        let actions = match Action::find_actions(&root, &command, &special) {
-            Ok(actions) => actions,
-            Err(error)  => return Err(error)
-        };
+        let actions = try!(Action::find_actions(&root, &command, &special));
 
         Ok(Config {
             actions: actions,
