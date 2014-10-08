@@ -2,36 +2,29 @@ extern crate in_order;
 
 use std::io::fs::PathExtensions;
 use in_order::config::{Config, Do, Undo};
-use std::io::{File, Command};
+use std::io::{File, Command, TempDir};
 
 fn run_command(cmd: &str, args: &[&str]) {
-    let p = Command::new(cmd).args(args).spawn();
-
-    match p {
-        Err(error) => fail!(error),
-        Ok(mut p)  => match p.wait() {
-            Err(error) => fail!(error),
-            Ok(_)      => ()
-        }
-    };
+    let mut p = Command::new(cmd).args(args)
+                             .spawn()
+                             .unwrap();
+    p.wait().unwrap();
 }
 
-fn save_config(path: &str) {
-    let args = vec![path, "/tmp/do.toml"];
-
-    run_command("cp", args.as_slice())
-}
-
-fn restore_config(path: &str) {
-    let args = vec!["/tmp/do.toml", path];
-
-    run_command("mv", args.as_slice())
+fn temp_dir_copy(path: &str) -> TempDir {
+    let p = Path::new(path);
+    assert!(p.exists() && p.is_dir());
+    let dir = TempDir::new_in(&Path::new("/tmp"), ".in-order-test").unwrap();
+    {
+        let args = vec!["-r", path, dir.path().as_str().unwrap()];
+        run_command("cp", args.as_slice());
+    }
+    dir
 }
 
 fn read(path: &str) -> String {
     File::open(&Path::new(path)).read_to_string().unwrap()
 }
-
 
 #[test]
 fn read_config() {
@@ -67,10 +60,12 @@ fn perform_do_undo() {
         "command = \"sh\"\nroot = \"tests/sequence\"\n[special]\n[special.3]\ncommand = \"special\"\ncurrent_action = 0\n";
     let config_3 =
         "command = \"sh\"\nroot = \"tests/sequence\"\n[special]\n[special.3]\ncommand = \"special\"\ncurrent_action = 3\n";
-    let path = "tests/sequence/do.toml";
-    let mut config = Config::read(Some(path.to_string())).unwrap();
 
-    save_config(path);
+    let dir = temp_dir_copy("tests/sequence/");
+
+    let path = dir.path().join("do.toml");
+    let path = path.as_str().unwrap();
+    let mut config = Config::read(Some(path.to_string())).unwrap();
 
     config.perform(Do);
 
@@ -83,6 +78,4 @@ fn perform_do_undo() {
     assert!(!Path::new("/tmp/in-order-test-file-1").exists());
     assert!(!Path::new("/tmp/in-order-test-file-2").exists());
     assert_eq!(read(path).as_slice(), config_0);
-
-    restore_config(path);
 }
