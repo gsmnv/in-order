@@ -109,37 +109,40 @@ impl Config {
             return
         }
 
-        let mut actions = self.actions.clone();
+        {
+            // Borrow actions mutably for this scope
+            let ref mut actions = self.actions;
 
-        let not_yet_performed_actions = match direction {
-            Do   => actions.slice_mut(current_action, self.actions.len()),
-            Undo => {
-                let actions = actions.slice_mut(0, current_action);
+            let not_yet_performed_actions = match direction {
+                Do   => actions.slice_from_mut(current_action),
+                Undo => {
+                    let actions = actions.slice_mut(0, current_action);
 
-                actions.reverse();
-                actions
-            }
-        };
-
-        for action in not_yet_performed_actions.iter() {
-            println!("Performing '{}' of {}", direction, action.name);
-
-            let process = match direction {
-                Do   => action.do_command(),
-                Undo => action.undo_command()
+                    actions.reverse();
+                    actions
+                }
             };
 
-            match process {
-                Err(error) => {
-                    println!("{}", error);
-                    break;
-                },
-                Ok(output) => {
-                    println!("{}", output);
+            for action in not_yet_performed_actions.iter() {
+                println!("Performing '{}' of {}", direction, action.name);
 
-                    match direction {
-                        Do   => current_action += 1,
-                        Undo => current_action -= 1
+                let process = match direction {
+                    Do   => action.do_command(),
+                    Undo => action.undo_command()
+                };
+
+                match process {
+                    Err(error) => {
+                        println!("{}", error);
+                        break;
+                    },
+                    Ok(output) => {
+                        println!("{}", output);
+
+                        match direction {
+                            Do   => current_action += 1,
+                            Undo => current_action -= 1
+                        }
                     }
                 }
             }
