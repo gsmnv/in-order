@@ -1,0 +1,18 @@
+[package]
+name = "in_order"
+version = "0.0.1"
+authors = ["George Semenov <me@gsemenov.com>"]
+
+[dependencies.toml]
+git = "https://github.com/alexcrichton/toml-rs"
+
+[[bin]]
+name = "in-order"
+
+[profile.test]
+opt-level = 0
+debug = true
+
+[profile.dev]
+opt-level = 0
+debug = true
